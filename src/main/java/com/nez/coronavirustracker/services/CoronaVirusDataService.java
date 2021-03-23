@@ -23,15 +23,20 @@ public class CoronaVirusDataService {
 	private static String VIRUS_DATA_URL = "https://raw.githubusercontent.com/qngnhat/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv";
 
 	private List<LocationStats> allStats = new ArrayList<>();
+	
+	private HttpResponse<String> getVirusDataAndToString() throws IOException, InterruptedException {
+		HttpClient client = HttpClient.newHttpClient();
+		HttpRequest request = HttpRequest.newBuilder().uri(URI.create(VIRUS_DATA_URL)).build();
+		HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
+		return httpResponse;
+	}
 
 	@PostConstruct
 	@Scheduled(cron = "* * 1 * * *") // this execute every second
 	public void fetchVirusData() throws IOException, InterruptedException {
 		List<LocationStats> newStats = new ArrayList<>();
 
-		HttpClient client = HttpClient.newHttpClient();
-		HttpRequest request = HttpRequest.newBuilder().uri(URI.create(VIRUS_DATA_URL)).build();
-		HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
+		HttpResponse<String> httpResponse = getVirusDataAndToString();
 
 		StringReader csvBodyReader = new StringReader(httpResponse.body());
 
@@ -49,6 +54,16 @@ public class CoronaVirusDataService {
 		this.allStats = newStats;
 	}
 
+	
+
+//	@PostConstruct
+//	public void fetchCountryData() throws IOException, InterruptedException {
+//		LocationStats locationStats = new LocationStats();
+//		HttpResponse<String> httpResponse = getVirusDataAndToString();
+//		StringReader csvBodyReader = new StringReader(httpResponse.body());
+//		Iterable<CSVRecord> records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(csvBodyReader);
+//	}
+	
 	public List<LocationStats> getAllStats() {
 		return allStats;
 	}
